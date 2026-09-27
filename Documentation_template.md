@@ -1,74 +1,159 @@
-# ML Challenge 2026: Business Entity Resolution Solution Template
+# Amazon ML Challenge 2026
+# Business Entity Resolution
 
-**Team Name:** [Your Team Name]  
-**Team Members:** [List all team members]  
-**Submission Date:** [Date]
+## 1. Project Overview
 
----
+This project solves the Business Entity Resolution challenge by identifying matching business entities across multiple data sources.
 
-## 1. Executive Summary
-*Provide a brief 2-3 sentence overview of your approach and key innovations.*
+The task is to match businesses from Source 1 with corresponding entities in Source 2 and Source 3.
 
----
-
-## 2. Methodology
-
-### 2.1 Problem Analysis
-*Key insights discovered during EDA — noise patterns, address variations, missing fields, etc.*
-
-### 2.2 Solution Strategy
-*Outline your high-level approach.*
-
-**Approach Type:** [Blocking + Classifier / End-to-End / Graph-Based / Hybrid, etc]  
-**Core Innovation:** [Brief description of your main technical contribution]
+The solution focuses on scalable candidate generation using business names and addresses.
 
 ---
 
-## 3. Candidate Generation (Blocking)
-*Describe how you reduced the comparison space to a manageable candidate set.*
+## 2. Dataset
 
-- **Blocking keys used:** [e.g., PIN code, phonetic name encoding, TF-IDF, etc.]
-- **Candidate pairs generated:** [total]
-- **How you ensured true matches were not lost:**
+The dataset contains three source files:
 
----
+- Source 1
+- Source 2
+- Source 3
 
-## 4. Matching Model
+Each business record contains:
 
-**Features used:**
-- Name features: [e.g., Jaccard, Levenshtein, phonetic encoding]
-- Address features: [e.g., token overlap, edit distance, PIN code matching]
-- Other: []
+- entity_id
+- business_name
+- business_address
+- country
 
-**Model type:** [e.g., XGBoost, Siamese Network, Transformer, etc.]  
-**Threshold selection method:** [e.g., F_0.5 optimization on validation set]
+The training data also provides ground-truth mappings between Source 1 and the matching entities in Source 2 and Source 3.
 
 ---
 
-## 5. Results & Error Analysis
+## 3. Data Preprocessing
 
-- **F_0.5 Score (macro):** [your best validation score]
-- **Common false positives (wrong merges):** [brief description]
-- **Common false negatives (missed matches):** [brief description]
+Business names and addresses were normalized before matching.
 
----
+The normalization process includes:
 
-## 6. Conclusion
-*Summarize your approach, key achievements, and lessons learned in 2-3 sentences.*
+- Converting text to lowercase
+- Removing non-alphanumeric characters
+- Creating normalized business-name representations
+- Extracting useful address tokens
 
----
-
-## Appendix
-
-### A. Code Artefacts
-*Your complete, runnable code ships in the submission zip under
-`code/business_entity_resolution/` (all source in `src/`, with a `README.md` and
-`requirements.txt`). Summarise its structure and the entry point(s) to reproduce
-`output/matching_results.tsv` and `output/candidate_pairs.tsv` here.*
-
-### B. Additional Results
-*Include any additional charts, graphs, or detailed results.*
+This helps identify businesses even when formatting differs between sources.
 
 ---
 
-**Note:** Teams can modify sections according to their approach while maintaining clarity and technical depth.
+## 4. Candidate Generation / Blocking
+
+Because the datasets contain millions of records, comparing every Source 1 record with every Source 2 and Source 3 record would be computationally expensive.
+
+Therefore, blocking was used to generate a smaller set of possible candidates.
+
+The blocking approach uses:
+
+- Exact normalized business-name blocks
+- Business-name prefixes
+- Business-name edge signatures
+- Address tokens
+- Adjacent address-token pairs
+- Country information
+
+Multiple blocking strategies were combined to improve candidate recall.
+
+---
+
+## 5. Matching Approach
+
+Candidate pairs were generated using the blocking strategy.
+
+The generated candidate pairs were then used to produce the final matching results.
+
+The final output contains:
+
+- `source1_entity_id`
+- `matched_entity_ids`
+
+Only candidate entities from Source 2 and Source 3 are considered for matching.
+
+---
+
+## 6. Candidate Output
+
+The final candidate file contains:
+
+- `source1_entity_id`
+- `candidate_entity_ids`
+
+Candidate IDs are stored as comma-separated values for each Source 1 entity.
+
+This allows the final matching results to be checked against the generated candidate set.
+
+---
+
+## 7. Output Files
+
+The final submission contains:
+
+### matching_results.tsv
+
+Contains the predicted matching entities for every Source 1 entity.
+
+### candidate_pairs.tsv
+
+Contains the candidate entities generated for every Source 1 entity.
+
+---
+
+## 8. Tools and Technologies
+
+The project was implemented using:
+
+- Python
+- DuckDB
+- Pandas
+- Regular expressions
+- TSV data processing
+
+DuckDB was used to process the large candidate-pair dataset efficiently.
+
+---
+
+## 9. Scalability
+
+The dataset contains millions of records across the three sources.
+
+To avoid an all-pairs comparison, the solution uses blocking and candidate generation.
+
+This significantly reduces the search space before producing the final matching results.
+
+---
+
+## 10. Project Structure
+
+```text
+student_resource/
+│
+├── dataset/
+│
+├── output/
+│   ├── matching_results.tsv
+│   └── candidate_pairs.tsv
+│
+├── utils/
+│
+├── explore_dataset.py
+├── analyze_matching.py
+├── test_blocking.py
+├── evaluate_blocking.py
+├── test_blocking_v2.py
+├── test_blocking_v3.py
+├── test_blocking_v4.py
+├── test_blocking_v5.py
+├── test_blocking_v6.py
+├── test_blocking_v7.py
+├── test_blocking_v8.py
+├── build_final_pipeline.py
+│
+└── Documentation_template.md
